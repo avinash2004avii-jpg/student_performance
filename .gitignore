@@ -1,0 +1,22 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database files
+*.db
+
+# CSV (optional - ignore if large dataset)
+students_data.csv
+
+# System files
+desktop.ini
+.DS_Store
+
+# Model files (optional if large)
+*.pkl
+
+# Environment variables
+.env

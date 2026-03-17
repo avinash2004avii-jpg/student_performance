@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Teacher Dashboard</title>
+
+<style>
+
+body{
+font-family: Arial, sans-serif;
+margin:20px;
+background:#f5f5f5;
+}
+
+h1{
+color:#333;
+}
+
+table{
+border-collapse: collapse;
+width:100%;
+background:white;
+}
+
+th, td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
+}
+
+th{
+background-color:#f2f2f2;
+}
+
+.risk{
+background-color:red;
+color:white;
+font-weight:bold;
+}
+
+.safe{
+background-color:#e8ffe8;
+}
+
+.section{
+background:white;
+padding:15px;
+margin-bottom:25px;
+border-radius:5px;
+box-shadow:0px 0px 5px rgba(0,0,0,0.1);
+}
+
+.insight{
+background:#eef5ff;
+padding:15px;
+border-left:5px solid #4a90e2;
+font-weight:bold;
+}
+
+button{
+padding:10px 20px;
+background:#4CAF50;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+button:hover{
+background:#45a049;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Teacher Dashboard</h1>
+
+
+<!-- -------------------- -->
+<!-- AI Insight -->
+<!-- -------------------- -->
+
+<div class="section">
+
+<h2>AI Insight</h2>
+
+<div class="insight">
+{{ insight }}
+</div>
+
+</div>
+
+
+<!-- -------------------- -->
+<!-- Grade Distribution Chart -->
+<!-- -------------------- -->
+
+<div class="section">
+
+<h2>Student Grade Distribution</h2>
+
+{{ graph | safe }}
+
+</div>
+
+
+<!-- -------------------- -->
+<!-- Attendance vs Grade Chart -->
+<!-- -------------------- -->
+
+<div class="section">
+
+<h2>Attendance vs Grade</h2>
+
+{{ scatter_graph | safe }}
+
+</div>
+
+
+<!-- -------------------- -->
+<!-- At Risk Students -->
+<!-- -------------------- -->
+
+<div class="section">
+
+<h2>⚠ At Risk Students</h2>
+
+<table>
+
+<tr>
+<th>Attendance</th>
+<th>Study Hours</th>
+<th>Previous Grade</th>
+<th>Assignments</th>
+<th>Behavior Score</th>
+<th>Status</th>
+</tr>
+
+{% for student in risk_students %}
+
+<tr class="risk">
+
+<td>{{ student.attendance }}</td>
+<td>{{ student.study_hours }}</td>
+<td>{{ student.previous_grade }}</td>
+<td>{{ student.assignments }}</td>
+<td>{{ student.behavior_score }}</td>
+<td>{{ student.risk }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+
+<!-- -------------------- -->
+<!-- All Students -->
+<!-- -------------------- -->
+
+<div class="section">
+
+<h2>All Students</h2>
+
+<table>
+
+<tr>
+<th>Attendance</th>
+<th>Study Hours</th>
+<th>Previous Grade</th>
+<th>Assignments</th>
+<th>Behavior Score</th>
+<th>Risk Status</th>
+</tr>
+
+{% for student in students %}
+
+<tr class="{% if student.risk == '⚠ At Risk' %}risk{% else %}safe{% endif %}">
+
+<td>{{ student.attendance }}</td>
+<td>{{ student.study_hours }}</td>
+<td>{{ student.previous_grade }}</td>
+<td>{{ student.assignments }}</td>
+<td>{{ student.behavior_score }}</td>
+<td>{{ student.risk }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+
+<!-- -------------------- -->
+<!-- Prediction Form -->
+<!-- -------------------- -->
+
+<div class="section">
+
+<h2>Predict Student Performance</h2>
+
+<form action="/predict" method="POST">
+
+Attendance:
+<input type="number" step="any" name="attendance" required>
+<br><br>
+
+Study Hours:
+<input type="number" step="any" name="study_hours" required>
+<br><br>
+
+Previous Grade:
+<input type="number" step="any" name="previous_grade" required>
+<br><br>
+
+Assignments:
+<input type="number" step="any" name="assignments" required>
+<br><br>
+
+Behavior Score:
+<input type="number" step="any" name="behavior_score" required>
+<br><br>
+
+<button type="submit">Predict Performance</button>
+
+</form>
+
+</div>
+
+
+<br>
+
+<a href="/">Logout</a>
+
+</body>
+</html>

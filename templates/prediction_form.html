@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Student Performance Prediction</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0a0016;
+color:white;
+}
+
+.topbar{
+background:linear-gradient(90deg,#4b0082,#8a2be2);
+padding:15px 30px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.container{
+max-width:700px;
+margin:60px auto;
+background:#140024;
+padding:40px;
+border-radius:12px;
+box-shadow:0 0 15px rgba(138,43,226,0.4);
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin-top:6px;
+margin-bottom:18px;
+border-radius:6px;
+border:none;
+}
+
+button{
+background:#4b6cff;
+color:white;
+padding:12px 20px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+.result{
+margin-top:25px;
+font-size:20px;
+font-weight:bold;
+color:#00e676;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+
+<h2>🎓 Student Performance System</h2>
+
+<a href="/admin">
+<button>Back</button>
+</a>
+
+</div>
+
+
+<div class="container">
+
+<h2>Student Performance Prediction</h2>
+
+<form action="/predict" method="POST">
+
+<label>Class</label>
+<select name="class">
+<option>8th</option>
+<option>9th</option>
+<option>10th</option>
+</select>
+
+
+<label>Section</label>
+<select name="section">
+<option>A</option>
+<option>B</option>
+<option>C</option>
+</select>
+
+
+<label>Attendance (%)</label>
+<input type="number" name="attendance" required>
+
+
+<label>Internal Test 1</label>
+<input type="number" name="internal1" required>
+
+
+<label>Internal Test 2</label>
+<input type="number" name="internal2" required>
+
+
+<label>Previous Exam Score</label>
+<input type="number" name="previous_score" required>
+
+
+<button type="submit">Predict Final Exam Score</button>
+
+</form>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>AI Student Performance System</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:linear-gradient(135deg,#12002b,#2b0057,#3a0070);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+}
+
+.container{
+text-align:center;
+width:100%;
+max-width:1100px;
+}
+
+h1{
+margin-bottom:50px;
+font-size:40px;
+letter-spacing:1px;
+}
+
+.cards{
+display:flex;
+justify-content:center;
+gap:35px;
+flex-wrap:wrap;
+}
+
+.card{
+width:320px;
+height:220px;
+padding:30px;
+border-radius:16px;
+background:#16002f;
+box-shadow:0 0 25px rgba(200,0,255,0.4);
+transition:0.3s;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+}
+
+.card:hover{
+transform:translateY(-8px);
+box-shadow:0 0 45px rgba(200,0,255,0.8);
+}
+
+.card h2{
+margin-bottom:12px;
+}
+
+.card p{
+font-size:14px;
+color:#d8d8d8;
+text-align:center;
+margin-bottom:20px;
+}
+
+button{
+padding:11px 30px;
+border:none;
+border-radius:25px;
+background:linear-gradient(90deg,#a100ff,#ff00d4);
+color:white;
+font-size:15px;
+cursor:pointer;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🎓 AI Student Performance System</h1>
+
+<div class="cards">
+
+<!-- Teacher Login -->
+
+<div class="card">
+
+<h2>👨‍🏫 Teacher Login</h2>
+
+<p>
+Access student predictions, monitor at-risk students,
+and generate AI insights.
+</p>
+
+<a href="/teacher-login">
+<button>Teacher Login</button>
+</a>
+
+</div>
+
+
+<!-- Admin Login -->
+
+<div class="card">
+
+<h2>🛠 Admin Login</h2>
+
+<p>
+Manage teachers, students, system analytics,
+and control the AI platform.
+</p>
+
+<a href="/admin-login">
+<button>Admin Login</button>
+</a>
+
+</div>
+
+
+<!-- Student Login -->
+
+<div class="card">
+
+<h2>🎓 Student Login</h2>
+
+<p>
+Check your performance prediction,
+attendance insights, and improvement tips.
+</p>
+
+<a href="/student-login">
+<button>Student Login</button>
+</a>
+
+</div>
+
+
+</div>
+
+</div>
+
+</body>
+</html>

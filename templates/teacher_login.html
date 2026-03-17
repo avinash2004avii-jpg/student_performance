@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Teacher Login</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:linear-gradient(135deg,#12002b,#2b0057,#3a0070);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+}
+
+/* login card */
+
+.login-box{
+width:420px;
+padding:45px;
+border-radius:16px;
+background:#16002f;
+box-shadow:0 0 40px rgba(200,0,255,0.6);
+text-align:center;
+}
+
+h2{
+margin-bottom:35px;
+}
+
+/* input container */
+
+.input-group{
+display:flex;
+align-items:center;
+background:#ffffff;
+border-radius:8px;
+margin-bottom:20px;
+overflow:hidden;
+height:45px;
+transition:0.3s;
+}
+
+/* glow effect */
+
+.input-group:focus-within{
+box-shadow:0 0 10px #ff00d4;
+}
+
+/* icon box */
+
+.icon-box{
+width:45px;
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#f1f1f1;
+color:#666;
+cursor:pointer;
+}
+
+/* input field */
+
+.input-group input{
+flex:1;
+height:100%;
+border:none;
+outline:none;
+padding-left:10px;
+font-size:14px;
+}
+
+/* login button */
+
+button{
+width:100%;
+height:45px;
+border:none;
+border-radius:25px;
+background:linear-gradient(90deg,#a100ff,#ff00d4);
+color:white;
+font-size:16px;
+cursor:pointer;
+margin-top:10px;
+transition:0.3s;
+}
+
+button:hover{
+opacity:0.9;
+transform:scale(1.02);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+<h2>👨‍🏫 Teacher Login</h2>
+
+<form method="POST" action="/login">
+
+<div class="input-group">
+<div class="icon-box">
+<i class="fa-solid fa-user"></i>
+</div>
+<input type="text" name="username" placeholder="Username" required>
+</div>
+
+<div class="input-group">
+<div class="icon-box">
+<i class="fa-solid fa-eye" id="togglePassword"></i>
+</div>
+<input type="password" id="password" name="password" placeholder="Password" required>
+</div>
+
+<button type="submit">Login</button>
+
+</form>
+
+</div>
+
+<script>
+
+const togglePassword = document.querySelector("#togglePassword");
+const password = document.querySelector("#password");
+
+togglePassword.addEventListener("click", function(){
+
+const type = password.getAttribute("type") === "password" ? "text" : "password";
+password.setAttribute("type", type);
+
+this.classList.toggle("fa-eye-slash");
+
+});
+
+</script>
+
+</body>
+</html>
