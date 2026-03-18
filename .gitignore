@@ -1,22 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
 # Virtual environment
 venv/
+env/
+.venv/
+ENV/
 
-# Python cache
-__pycache__/
-*.pyc
+# Flask / app runtime files
+users.db
+instance/
 
-# Database files
-*.db
+# ML models (large binary files - regenerate with train_model.py)
+models/*.pkl
 
-# CSV (optional - ignore if large dataset)
-students_data.csv
+# Data outputs
+data/bulk_results.csv
 
-# System files
-desktop.ini
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
 .DS_Store
+Thumbs.db
+desktop.ini
 
-# Model files (optional if large)
-*.pkl
-
-# Environment variables
-.env
+# Previews (dev only)
+previews/

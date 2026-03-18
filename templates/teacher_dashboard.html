@@ -1,242 +1,85 @@
-<!DOCTYPE html>
-<html>
-<head>
-
-<title>Teacher Dashboard</title>
-
-<style>
-
-body{
-font-family: Arial, sans-serif;
-margin:20px;
-background:#f5f5f5;
-}
-
-h1{
-color:#333;
-}
-
-table{
-border-collapse: collapse;
-width:100%;
-background:white;
-}
-
-th, td{
-border:1px solid #ccc;
-padding:8px;
-text-align:center;
-}
-
-th{
-background-color:#f2f2f2;
-}
-
-.risk{
-background-color:red;
-color:white;
-font-weight:bold;
-}
-
-.safe{
-background-color:#e8ffe8;
-}
-
-.section{
-background:white;
-padding:15px;
-margin-bottom:25px;
-border-radius:5px;
-box-shadow:0px 0px 5px rgba(0,0,0,0.1);
-}
-
-.insight{
-background:#eef5ff;
-padding:15px;
-border-left:5px solid #4a90e2;
-font-weight:bold;
-}
-
-button{
-padding:10px 20px;
-background:#4CAF50;
-color:white;
-border:none;
-cursor:pointer;
-}
-
-button:hover{
-background:#45a049;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>Teacher Dashboard</h1>
-
-
-<!-- -------------------- -->
-<!-- AI Insight -->
-<!-- -------------------- -->
-
-<div class="section">
-
-<h2>AI Insight</h2>
-
-<div class="insight">
-{{ insight }}
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+{% block body %}
+<div class="topbar">
+  <span class="topbar-brand">🎓 Student Performance System</span>
+  <div class="topbar-right">
+    <span class="topbar-user">👨‍🏫 {{ session.username }}</span>
+    <a href="/logout" class="btn btn-outline btn-sm btn-round">Logout</a>
+  </div>
 </div>
 
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">Teacher Panel</div>
+    <a href="/teacher" class="active">📊 Dashboard</a>
+    <a href="/teacher/predict">🔮 Predict Student</a>
+    <a href="/teacher/bulk-predict">📂 Bulk Predict</a>
+    <a href="/teacher/students">👨‍🎓 All Students</a>
+    <a href="/teacher/add-student">➕ Add Student</a>
+    <div class="divider"></div>
+    <a href="/logout">🚪 Logout</a>
+  </nav>
+
+  <div class="page">
+    <div class="container">
+      <h1>Welcome, {{ teacher.name if teacher else session.username }} 👋</h1>
+      <p class="page-sub">Here's your class overview</p>
+
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Total Students</div><div class="value">{{ total }}</div></div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#8b0000,#c0392b)">
+          <div class="label">At Risk</div><div class="value">{{ at_risk }}</div>
+        </div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#1a5c35,#27ae60)">
+          <div class="label">Safe Students</div><div class="value">{{ total - at_risk }}</div>
+        </div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#7b4a00,#e67e22)">
+          <div class="label">Class Average</div><div class="value">{{ avg_score }}</div>
+        </div>
+      </div>
+
+      <div class="insight">
+        📊 Class average score is <b>{{ avg_score }}/100</b> with <b>{{ avg_att }}%</b> average attendance.
+        <b style="color:var(--red)">{{ risk_pct }}%</b> of students are at risk.
+        {% if risk_pct > 20 %}Focus on improving attendance and internal test scores.{% endif %}
+      </div>
+
+      <!-- Quick actions -->
+      <div class="section" style="display:flex;gap:12px;flex-wrap:wrap;padding:18px 24px">
+        <a href="/teacher/predict" class="btn btn-primary">🔮 Predict Single Student</a>
+        <a href="/teacher/bulk-predict" class="btn btn-success">📂 Bulk Predict (Upload CSV)</a>
+        <a href="/teacher/students" class="btn btn-outline">👨‍🎓 View All Students</a>
+      </div>
+
+      <!-- At-risk table -->
+      <div class="section">
+        <h2>⚠ At-Risk Students <span style="font-size:13px;color:var(--muted);font-weight:normal">(predicted score &lt; 70)</span></h2>
+        {% if risk_students %}
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Student ID</th><th>Final Score</th><th>Attendance</th><th>Study Hrs</th><th>IT1</th><th>IT2</th><th>Assignment</th></tr></thead>
+            <tbody>
+              {% for s in risk_students %}
+              <tr>
+                <td><b>{{ s.Student_ID }}</b></td>
+                <td><span class="badge badge-risk">{{ s.Final_Exam_Score }}</span></td>
+                <td>{{ s.Attendence }}%</td>
+                <td>{{ s.Study_hours }}</td>
+                <td>{{ s["internal_test 1"] }}</td>
+                <td>{{ s["internal_test 2"] }}</td>
+                <td>{{ s.Assignment_score }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty">✅ No at-risk students right now.</div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
 </div>
-
-
-<!-- -------------------- -->
-<!-- Grade Distribution Chart -->
-<!-- -------------------- -->
-
-<div class="section">
-
-<h2>Student Grade Distribution</h2>
-
-{{ graph | safe }}
-
-</div>
-
-
-<!-- -------------------- -->
-<!-- Attendance vs Grade Chart -->
-<!-- -------------------- -->
-
-<div class="section">
-
-<h2>Attendance vs Grade</h2>
-
-{{ scatter_graph | safe }}
-
-</div>
-
-
-<!-- -------------------- -->
-<!-- At Risk Students -->
-<!-- -------------------- -->
-
-<div class="section">
-
-<h2>⚠ At Risk Students</h2>
-
-<table>
-
-<tr>
-<th>Attendance</th>
-<th>Study Hours</th>
-<th>Previous Grade</th>
-<th>Assignments</th>
-<th>Behavior Score</th>
-<th>Status</th>
-</tr>
-
-{% for student in risk_students %}
-
-<tr class="risk">
-
-<td>{{ student.attendance }}</td>
-<td>{{ student.study_hours }}</td>
-<td>{{ student.previous_grade }}</td>
-<td>{{ student.assignments }}</td>
-<td>{{ student.behavior_score }}</td>
-<td>{{ student.risk }}</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-</div>
-
-
-<!-- -------------------- -->
-<!-- All Students -->
-<!-- -------------------- -->
-
-<div class="section">
-
-<h2>All Students</h2>
-
-<table>
-
-<tr>
-<th>Attendance</th>
-<th>Study Hours</th>
-<th>Previous Grade</th>
-<th>Assignments</th>
-<th>Behavior Score</th>
-<th>Risk Status</th>
-</tr>
-
-{% for student in students %}
-
-<tr class="{% if student.risk == '⚠ At Risk' %}risk{% else %}safe{% endif %}">
-
-<td>{{ student.attendance }}</td>
-<td>{{ student.study_hours }}</td>
-<td>{{ student.previous_grade }}</td>
-<td>{{ student.assignments }}</td>
-<td>{{ student.behavior_score }}</td>
-<td>{{ student.risk }}</td>
-
-</tr>
-
-{% endfor %}
-
-</table>
-
-</div>
-
-
-<!-- -------------------- -->
-<!-- Prediction Form -->
-<!-- -------------------- -->
-
-<div class="section">
-
-<h2>Predict Student Performance</h2>
-
-<form action="/predict" method="POST">
-
-Attendance:
-<input type="number" step="any" name="attendance" required>
-<br><br>
-
-Study Hours:
-<input type="number" step="any" name="study_hours" required>
-<br><br>
-
-Previous Grade:
-<input type="number" step="any" name="previous_grade" required>
-<br><br>
-
-Assignments:
-<input type="number" step="any" name="assignments" required>
-<br><br>
-
-Behavior Score:
-<input type="number" step="any" name="behavior_score" required>
-<br><br>
-
-<button type="submit">Predict Performance</button>
-
-</form>
-
-</div>
-
-
-<br>
-
-<a href="/">Logout</a>
-
-</body>
-</html>
+{% endblock %}

@@ -1,324 +1,104 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-
-<title>Admin Dashboard</title>
-
-<style>
-
-body{
-margin:0;
-font-family:Arial, Helvetica, sans-serif;
-background:#0a0016;
-color:white;
-display:flex;
-}
-
-/* Sidebar */
-
-.sidebar{
-width:220px;
-height:100vh;
-background:linear-gradient(180deg,#140024,#0a0016);
-padding-top:20px;
-position:fixed;
-left:0;
-top:0;
-box-shadow:0 0 15px rgba(138,43,226,0.4);
-}
-
-.sidebar h2{
-text-align:center;
-margin:20px;
-padding:12px 0;
-border-radius:25px;
-background:linear-gradient(90deg,#7b2cff,#a64cff);
-color:white;
-font-weight:bold;
-box-shadow:0 0 12px rgba(138,43,226,0.7);
-}
-
-.sidebar a{
-display:block;
-padding:15px 25px;
-color:#caa9ff;
-text-decoration:none;
-font-size:16px;
-transition:0.3s;
-border-left:4px solid transparent;
-}
-
-.sidebar a:hover{
-background:linear-gradient(90deg,#7b2cff,#a64cff);
-color:white;
-border-left:4px solid white;
-}
-
-/* Main Content */
-
-.main{
-margin-left:220px;
-width:100%;
-}
-
-/* Topbar */
-
-.topbar{
-background:linear-gradient(90deg,#4b0082,#8a2be2);
-padding:15px 30px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-box-shadow:0 0 10px #8a2be2;
-}
-
-.logout{
-background:white;
-color:#4b0082;
-border:none;
-padding:8px 15px;
-border-radius:20px;
-cursor:pointer;
-font-weight:bold;
-}
-
-/* Container */
-
-.container{
-padding:30px;
-}
-
-/* Cards */
-
-.cards{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:20px;
-margin-bottom:30px;
-}
-
-.card{
-padding:30px;
-border-radius:12px;
-text-align:center;
-background:linear-gradient(135deg,#7b2cff,#a64cff);
-box-shadow:0 0 20px rgba(138,43,226,0.6);
-cursor:pointer;
-transition:0.3s;
-color:white;
-}
-
-.card:hover{
-transform:translateY(-6px);
-box-shadow:0 0 30px rgba(138,43,226,0.9);
-}
-
-.card-title{
-font-size:18px;
-font-weight:bold;
-margin-bottom:8px;
-}
-
-.card h2{
-margin:0;
-font-size:42px;
-font-weight:bold;
-text-shadow:0 0 10px rgba(255,255,255,0.7);
-}
-
-.cards a{
-text-decoration:none;
-color:white;
-}
-
-/* Actions */
-
-.actions{
-background:#140024;
-padding:20px;
-border-radius:10px;
-margin-bottom:30px;
-box-shadow:0 0 10px rgba(138,43,226,0.4);
-}
-
-.actions a{
-text-decoration:none;
-}
-
-.actions button{
-padding:10px 15px;
-margin-right:10px;
-border:none;
-border-radius:20px;
-background:linear-gradient(90deg,#7b2cff,#a64cff);
-color:white;
-cursor:pointer;
-font-weight:bold;
-transition:0.3s;
-}
-
-.actions button:hover{
-opacity:0.9;
-transform:scale(1.05);
-}
-
-/* Teachers Table */
-
-table{
-width:100%;
-border-collapse:collapse;
-background:#140024;
-border-radius:10px;
-overflow:hidden;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid rgba(255,255,255,0.1);
-text-align:left;
-}
-
-th{
-background:#2a0050;
-color:#e6d3ff;
-}
-
-.delete-btn{
-background:#ff006e;
-color:white;
-padding:6px 12px;
-border-radius:6px;
-text-decoration:none;
-font-size:14px;
-}
-
-.delete-btn:hover{
-background:#ff3c8f;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<!-- Sidebar -->
-
-<div class="sidebar">
-
-<h2>Menu</h2>
-
-<a href="/admin">Dashboard</a>
-<a href="/analytics">Analytics</a>
-<a href="/students">Databases</a>
-<a href="/risk-students">Risk Students</a>
-<a href="/teacher">Teacher Panel</a>
-<a href="/add-student">Add Student</a>
-<a href="/">Log Out</a>
-
-</div>
-
-<!-- Main Content -->
-
-<div class="main">
-
-<!-- Topbar -->
-
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block body %}
 <div class="topbar">
-
-<h2>🎓 Student Performance System</h2>
-
-<a href="/">
-<button class="logout">Logout</button>
-</a>
-
+  <span class="topbar-brand">🎓 Student Performance System</span>
+  <div class="topbar-right">
+    <span class="topbar-user">🛠 {{ session.username }}</span>
+    <a href="/logout" class="btn btn-outline btn-sm btn-round">Logout</a>
+  </div>
 </div>
 
-<div class="container">
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">Admin Panel</div>
+    <a href="/admin" class="active">📊 Dashboard</a>
+    <a href="/admin/students">👨‍🎓 Students</a>
+    <a href="/admin/add-student">➕ Add Student</a>
+    <div class="divider"></div>
+    <a href="/logout">🚪 Logout</a>
+  </nav>
 
-<h1>Admin Dashboard</h1>
+  <div class="page">
+    <div class="container">
+      <h1>Admin Dashboard</h1>
+      <p class="page-sub">Overview of the entire system</p>
 
-<!-- Cards -->
+      <div class="stat-grid">
+        <a href="/admin/students">
+          <div class="stat-card"><div class="label">Total Students</div><div class="value">{{ total_students }}</div></div>
+        </a>
+        <div class="stat-card"><div class="label">Total Teachers</div><div class="value">{{ total_teachers }}</div></div>
+        <div class="stat-card" style="background:linear-gradient(135deg,#8b0000,#c0392b)">
+          <div class="label">At-Risk Students</div><div class="value">{{ risk_count }}</div>
+        </div>
+        <div class="stat-card"><div class="label">Total Users</div><div class="value">{{ users|length }}</div></div>
+      </div>
 
-<div class="cards">
+      <!-- Teachers -->
+      <div class="section">
+        <h2>👨‍🏫 Registered Teachers</h2>
+        {% if teachers %}
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Subject</th><th>Username</th><th>Email</th><th>Joined</th><th>Action</th></tr></thead>
+            <tbody>
+              {% for t in teachers %}
+              <tr>
+                <td><b>{{ t.name }}</b></td>
+                <td>{{ t.subject }}</td>
+                <td>{{ t.username }}</td>
+                <td>{{ t.email }}</td>
+                <td style="color:var(--muted);font-size:12px">{{ t.created_at[:10] }}</td>
+                <td><a href="/admin/delete-user/{{ t.user_id if t.user_id else '' }}"
+                       onclick="return confirm('Delete this teacher?')"
+                       class="btn btn-danger btn-sm">Delete</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty">No teachers registered yet. Teachers can sign up at /signup/teacher</div>
+        {% endif %}
+      </div>
 
-<a href="/students">
-<div class="card">
-<div class="card-title">Total Students</div>
-<h2>{{ total_students }}</h2>
+      <!-- All Users -->
+      <div class="section">
+        <h2>👥 All Users</h2>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Action</th></tr></thead>
+            <tbody>
+              {% for u in users %}
+              <tr>
+                <td style="color:var(--muted)">{{ u.id }}</td>
+                <td><b>{{ u.username }}</b></td>
+                <td>{{ u.email }}</td>
+                <td>
+                  {% if u.role == 'admin' %}<span class="badge badge-safe">admin</span>
+                  {% elif u.role == 'teacher' %}<span class="badge badge-avg">teacher</span>
+                  {% else %}<span class="badge" style="background:rgba(123,44,255,.15);color:#c4a8ff;border:1px solid var(--purple2)">student</span>
+                  {% endif %}
+                </td>
+                <td style="color:var(--muted);font-size:12px">{{ u.created_at[:10] }}</td>
+                <td>
+                  {% if u.id != session.user_id %}
+                  <a href="/admin/delete-user/{{ u.id }}"
+                     onclick="return confirm('Delete user {{ u.username }}?')"
+                     class="btn btn-danger btn-sm">Delete</a>
+                  {% else %}
+                  <span style="color:var(--muted);font-size:12px">You</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
-</a>
-
-<a href="#">
-<div class="card">
-<div class="card-title">Total Teachers</div>
-<h2>1</h2>
-</div>
-</a>
-
-<a href="/analytics">
-<div class="card">
-<div class="card-title">Total Predictions</div>
-<h2>{{ total_students }}</h2>
-</div>
-</a>
-
-<a href="/risk-students">
-<div class="card">
-<div class="card-title">At-Risk Students</div>
-<h2>{{ risk_count }}</h2>
-</div>
-</a>
-
-</div>
-
-<!-- Admin Actions -->
-
-<div class="actions">
-
-<h2>Admin Actions</h2>
-
-<a href="/add-student">
-<button>Add Student</button>
-</a>
-
-<a href="/students">
-<button>View All Students</button>
-</a>
-
-<a href="/prediction-form">
-<button>Make Prediction</button>
-</a>
-
-</div>
-
-<!-- Teachers Table -->
-
-<h3>All Teachers</h3>
-
-<table>
-
-<tr>
-<th>Name</th>
-<th>Email</th>
-<th>Action</th>
-</tr>
-
-<tr>
-<td>Sample Teacher</td>
-<td>teacher@email.com</td>
-<td>
-<a class="delete-btn" href="#">Edit</a>
-</td>
-</tr>
-
-</table>
-
-</div>
-
-</div>
-
-</body>
-
-</html>
+{% endblock %}

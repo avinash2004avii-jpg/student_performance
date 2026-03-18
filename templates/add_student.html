@@ -1,298 +1,96 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-
-<title>Add Student</title>
-
-<style>
-
-body{
-margin:0;
-font-family:Arial;
-background:#0a0016;
-color:white;
-}
-
-/* Topbar */
-
-.topbar{
-background:linear-gradient(90deg,#4b0082,#8a2be2);
-padding:15px 30px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-box-shadow:0 0 10px #8a2be2;
-}
-
-.logout{
-background:white;
-color:#4b0082;
-border:none;
-padding:8px 16px;
-border-radius:20px;
-cursor:pointer;
-font-weight:bold;
-}
-
-/* Container */
-
-.container{
-padding:40px;
-max-width:1200px;
-margin:auto;
-}
-
-/* Layout */
-
-.grid{
-display:grid;
-grid-template-columns:2fr 1fr;
-gap:30px;
-}
-
-/* Cards */
-
-.card{
-background:#140024;
-padding:25px;
-border-radius:12px;
-box-shadow:0 0 15px rgba(138,43,226,0.4);
-}
-
-/* Labels */
-
-label{
-font-size:14px;
-color:#ddd;
-}
-
-/* Inputs */
-
-input,select{
-width:100%;
-padding:10px;
-margin-top:6px;
-margin-bottom:18px;
-border-radius:6px;
-border:none;
-outline:none;
-}
-
-/* Buttons */
-
-button{
-padding:10px 18px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
-}
-
-.add-btn{
-background:#4b6cff;
-color:white;
-margin-right:10px;
-}
-
-.cancel-btn{
-background:#555;
-color:white;
-}
-
-.upload-btn{
-background:#1f9d55;
-color:white;
-width:100%;
-margin-top:10px;
-}
-
-.add-btn:hover{
-opacity:0.9;
-}
-
-.upload-btn:hover{
-opacity:0.9;
-}
-
-</style>
-
-</head>
-
-<body>
-
+{% extends "base.html" %}
+{% block title %}Add Student{% endblock %}
+{% block body %}
 <div class="topbar">
-
-<h2>🎓 Student Performance System</h2>
-
-<a href="/admin">
-<button class="logout">Back</button>
-</a>
-
+  <span class="topbar-brand">🎓 Student Performance System</span>
+  <div class="topbar-right">
+    <span class="topbar-user">🛠 {{ session.username }}</span>
+    <a href="/logout" class="btn btn-outline btn-sm btn-round">Logout</a>
+  </div>
 </div>
 
-<div class="container">
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">Admin Panel</div>
+    <a href="/admin">📊 Dashboard</a>
+    <a href="/admin/students">👨‍🎓 Students</a>
+    <a href="/admin/add-student" class="active">➕ Add Student</a>
+    <div class="divider"></div>
+    <a href="/logout">🚪 Logout</a>
+  </nav>
 
-<h1>➕ Add New Student</h1>
-<p style="color:#bbb">Enter student information to add them to the system.</p>
+  <div class="page">
+    <div class="container">
+      <h1>➕ Add New Student</h1>
+      <p class="page-sub">Manually enter a student's data into the database.</p>
 
-<div class="grid">
+      <div class="section" style="max-width:720px">
+        <form method="POST" action="/admin/add-student">
 
-<!-- Manual Entry -->
+          <div class="form-section-title">Identity</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label>Student ID</label>
+              <input type="text" name="student_id" required placeholder="e.g. 901"></div>
+            <div class="form-group"><label>Class</label>
+              <select name="class_"><option>8th</option><option>9th</option><option>10th</option></select></div>
+            <div class="form-group"><label>Section</label>
+              <select name="section"><option>A</option><option>B</option><option>C</option></select></div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group"><label>Age</label>
+              <input type="number" name="age" min="10" max="20" placeholder="14"></div>
+            <div class="form-group"><label>Gender</label>
+              <select name="gender"><option>Male</option><option>Female</option></select></div>
+            <div class="form-group"><label>Parent Education</label>
+              <select name="parent_edu">
+                <option>Primary</option><option>High School</option>
+                <option>PUC</option><option>Degree</option><option>Postgraduate</option>
+              </select></div>
+          </div>
 
-<div class="card">
+          <div class="form-section-title">Academic Scores</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label>Internal Test 1</label>
+              <input type="number" name="internal1" min="0" max="100" placeholder="0–100"></div>
+            <div class="form-group"><label>Internal Test 2</label>
+              <input type="number" name="internal2" min="0" max="100" placeholder="0–100"></div>
+            <div class="form-group"><label>Assignment Score</label>
+              <input type="number" name="assignment" min="0" max="100" placeholder="0–100"></div>
+          </div>
+          <div class="form-grid-3">
+            <div class="form-group"><label>Previous Exam Score</label>
+              <input type="number" name="previous" min="0" max="100" placeholder="0–100"></div>
+            <div class="form-group"><label>Final Exam Score</label>
+              <input type="number" name="final_score" min="0" max="100" placeholder="0–100"></div>
+            <div class="form-group"><label>Attendance (%)</label>
+              <input type="number" name="attendance" min="0" max="100" placeholder="0–100"></div>
+          </div>
 
-<h2>Manual Student Entry</h2>
+          <div class="form-section-title">Study Behaviour</div>
+          <div class="form-grid-3">
+            <div class="form-group"><label>Study Hours/Day</label>
+              <input type="number" step="0.5" name="study_hours" placeholder="e.g. 3.5"></div>
+            <div class="form-group"><label>Sleep Hours/Day</label>
+              <input type="number" step="0.5" name="sleep_hours" placeholder="e.g. 7"></div>
+            <div class="form-group"><label>Health Issues</label>
+              <select name="health"><option>None</option><option>Minor</option><option>Frequent</option></select></div>
+          </div>
 
-<form action="/save-student" method="POST">
+          <div class="form-section-title">Other</div>
+          <div class="form-grid-2">
+            <div class="form-group"><label>Internet Access</label>
+              <select name="internet"><option>Yes</option><option>No</option></select></div>
+            <div class="form-group"><label>Extracurricular</label>
+              <select name="extra"><option>Yes</option><option>No</option></select></div>
+          </div>
 
-<h3>Basic Information</h3>
-
-<label>Student ID</label>
-<input type="text" name="student_id" required>
-
-<label>Class</label>
-<select name="class">
-<option>8th</option>
-<option>9th</option>
-<option>10th</option>
-</select>
-
-<label>Section</label>
-<select name="section">
-<option>A</option>
-<option>B</option>
-<option>C</option>
-</select>
-
-<label>Age</label>
-<input type="number" name="age" required>
-
-<label>Gender</label>
-<select name="gender">
-<option>Male</option>
-<option>Female</option>
-</select>
-
-
-<h3>Study Behaviour</h3>
-
-<label>Study Hours</label>
-<input type="number" step="0.1" name="study_hours">
-
-<label>Sleep Hours</label>
-<input type="number" step="0.1" name="sleep_hours">
-
-<label>Attendance (%)</label>
-<input type="number" name="attendance" min="0" max="100">
-
-
-<h3>Academic Performance</h3>
-
-<label>Internal Test 1</label>
-<input type="number" name="internal1" min="0" max="100">
-
-<label>Internal Test 2</label>
-<input type="number" name="internal2" min="0" max="100">
-
-<label>Assignment Score</label>
-<input type="number" name="assignment" min="0" max="100">
-
-<label>Previous Exam Score</label>
-<input type="number" name="previous" min="0" max="100">
-
-<label>Final Exam Score</label>
-<input type="number" name="final_score" min="0" max="100">
-
-
-<h3>Background Factors</h3>
-
-<label>Parent Education Level</label>
-<select name="parent_education">
-<option>Primary</option>
-<option>High School</option>
-<option>PUC</option>
-<option>Degree</option>
-<option>Postgraduate</option>
-</select>
-
-<label>Health Issues</label>
-<select name="health">
-<option>None</option>
-<option>Minor</option>
-<option>Frequent</option>
-</select>
-
-<label>Internet Access</label>
-<select name="internet">
-<option>Yes</option>
-<option>No</option>
-</select>
-
-<label>Extracurricular Activities</label>
-<select name="extra">
-<option>Yes</option>
-<option>No</option>
-</select>
-
-<button type="submit" class="add-btn">Add Student</button>
-
-<button class="cancel-btn" type="button" onclick="window.location='/admin'">
-Cancel
-</button>
-
-</form>
-
+          <div style="display:flex;gap:12px;margin-top:8px">
+            <button class="btn btn-primary" type="submit">➕ Add Student</button>
+            <a href="/admin/students" class="btn btn-outline">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
-
-
-<!-- Upload Students -->
-
-<div>
-
-<div class="card">
-
-<h2>Bulk Upload Students</h2>
-
-<form action="/upload-students" method="POST" enctype="multipart/form-data">
-
-<label>Select CSV or Excel File</label>
-
-<input type="file" name="file" accept=".csv,.xlsx" required>
-
-<p style="font-size:12px;color:#aaa;">
-Upload file containing columns:<br>
-<b>
-Student_ID, Class, section, Age, Gender, Study_hours, Sleep_hours,
-Parent_Education_Level, Health_Issues, Internet_Access, Attendence,
-internal_test 1, internal_test 2, Assignment_score,
-Extracurricular_Activities, Previous_Exam_Score, Final_Exam_Score
-</b>
-</p>
-
-<button type="submit" class="upload-btn">Upload Students</button>
-
-</form>
-
-</div>
-
-
-<div class="card" style="margin-top:20px">
-
-<h3>Risk Level Guide</h3>
-
-<p>⚠ High Risk → Final Score &lt; 50</p>
-
-<p>✅ Safe → Final Score ≥ 50</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</body>
-
-</html>
+{% endblock %}

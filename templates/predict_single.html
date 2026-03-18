@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Predict Student{% endblock %}
+{% block body %}
+<div class="topbar">
+  <span class="topbar-brand">🎓 Student Performance System</span>
+  <div class="topbar-right">
+    <span class="topbar-user">👨‍🏫 {{ session.username }}</span>
+    <a href="/logout" class="btn btn-outline btn-sm btn-round">Logout</a>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">Teacher Panel</div>
+    <a href="/teacher">📊 Dashboard</a>
+    <a href="/teacher/predict" class="active">🔮 Predict Student</a>
+    <a href="/teacher/bulk-predict">📂 Bulk Predict</a>
+    <a href="/teacher/students">👨‍🎓 All Students</a>
+    <a href="/teacher/add-student">➕ Add Student</a>
+    <div class="divider"></div>
+    <a href="/logout">🚪 Logout</a>
+  </nav>
+
+  <div class="page">
+    <div class="container">
+      <h1>🔮 Predict Single Student</h1>
+      <p class="page-sub">Enter the student's data to get an AI prediction and improvement suggestions.</p>
+
+      <!-- Two-column when result exists, single column otherwise -->
+      <div class="predict-layout{% if result %} predict-layout--split{% endif %}">
+
+        <!-- ── Form ── -->
+        <div class="section">
+          <form method="POST">
+            <div class="form-section-title">Academic Scores</div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Internal Test 1 (0–100)</label>
+                <input type="number" name="internal1" min="0" max="100"
+                  value="{{ request.form.get('internal1','') }}" placeholder="e.g. 65" required>
+              </div>
+              <div class="form-group">
+                <label>Internal Test 2 (0–100)</label>
+                <input type="number" name="internal2" min="0" max="100"
+                  value="{{ request.form.get('internal2','') }}" placeholder="e.g. 70" required>
+              </div>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Assignment Score (0–100)</label>
+                <input type="number" name="assignment" min="0" max="100"
+                  value="{{ request.form.get('assignment','') }}" placeholder="e.g. 80" required>
+              </div>
+              <div class="form-group">
+                <label>Previous Exam Score (0–100)</label>
+                <input type="number" name="previous_score" min="0" max="100"
+                  value="{{ request.form.get('previous_score','') }}" placeholder="e.g. 72" required>
+              </div>
+            </div>
+
+            <div class="form-section-title">Study &amp; Attendance</div>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label>Attendance (%)</label>
+                <input type="number" name="attendance" min="0" max="100"
+                  value="{{ request.form.get('attendance','') }}" placeholder="e.g. 85" required>
+              </div>
+              <div class="form-group">
+                <label>Study Hours / Day</label>
+                <input type="number" step="0.5" name="study_hours" min="0" max="24"
+                  value="{{ request.form.get('study_hours','') }}" placeholder="e.g. 4" required>
+              </div>
+              <div class="form-group">
+                <label>Sleep Hours / Day</label>
+                <input type="number" step="0.5" name="sleep_hours" min="0" max="24"
+                  value="{{ request.form.get('sleep_hours','7') }}" placeholder="e.g. 7" required>
+              </div>
+            </div>
+
+            <div class="form-section-title">Health</div>
+            <div class="form-group" style="max-width:200px">
+              <label>Health Issues</label>
+              <select name="health">
+                <option {% if request.form.get('health')=='None' %}selected{% endif %}>None</option>
+                <option {% if request.form.get('health')=='Minor' %}selected{% endif %}>Minor</option>
+                <option {% if request.form.get('health')=='Frequent' %}selected{% endif %}>Frequent</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary btn-round" style="width:100%;margin-top:12px" type="submit">
+              🔮 Run Prediction
+            </button>
+          </form>
+        </div>
+
+        <!-- ── Result (only shown after POST) ── -->
+        {% if result %}
+        <div>
+          <div class="section" style="text-align:center">
+            <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Predicted Final Exam Score</p>
+
+            {% if score < 70 %}
+              <div class="score-circle circle-risk">{{ score }}</div>
+              <div class="result-label result-risk">⚠ At Risk</div>
+              <p style="font-size:13px;color:var(--muted)">Immediate attention needed.</p>
+            {% elif score < 80 %}
+              <div class="score-circle circle-avg">{{ score }}</div>
+              <div class="result-label result-avg">📈 Average</div>
+              <p style="font-size:13px;color:var(--muted)">Room for improvement.</p>
+            {% else %}
+              <div class="score-circle circle-safe">{{ score }}</div>
+              <div class="result-label result-safe">✅ Good Performance</div>
+              <p style="font-size:13px;color:var(--muted)">Keep it up!</p>
+            {% endif %}
+          </div>
+
+          {% if suggestions %}
+          <div class="section">
+            <h3 style="margin-bottom:16px">💡 Improvement Suggestions</h3>
+            {% for title, body in suggestions %}
+            <div class="tip">
+              <div class="tip-title">{{ title }}</div>
+              <div class="tip-body">{{ body }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+      </div><!-- /.predict-layout -->
+    </div>
+  </div>
+</div>
+
+<style>
+.predict-layout { display: grid; grid-template-columns: 1fr; gap: 28px; align-items: start; }
+.predict-layout--split { grid-template-columns: 1fr 1fr; }
+.result-label { font-size: 17px; font-weight: bold; margin-bottom: 6px; }
+.result-risk  { color: var(--red); }
+.result-avg   { color: var(--amber); }
+.result-safe  { color: var(--green); }
+</style>
+
+{% endblock %}
