@@ -8,15 +8,30 @@ import pandas as pd
 import numpy as np
 import joblib, os, io
 import database as db
+from flask import session
+from flask import jsonify
+import traceback
+from dotenv import load_dotenv
+import os
+from google import genai
+
+load_dotenv()  # ✅ MUST come first
+
+# ✅ Create Gemini client (LATEST way)
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 app = Flask(__name__)
 app.secret_key = "sps_secret_key_change_in_production"
+
+  # ✅ ADD THIS BEFORE using getenv()
+
 
 # ── Paths ──────────────────────────────────────────────────────────
 BASE      = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE, "data",   "students_data.csv")
 BULK_OUT  = os.path.join(BASE, "data",   "bulk_results.csv")
 MDL_DIR   = os.path.join(BASE, "models")
+
 
 # ── Load model ────────────────────────────────────────────────────
 def load_model():
@@ -567,9 +582,303 @@ def student_dashboard():
         result=result, suggestions=suggestions,
     )
 
+def explain_prediction(row):
+    reasons = []
 
-# ════════════════════════════════════════════════════════════════════
-# RUN
-# ════════════════════════════════════════════════════════════════════
+    att = float(row.get("Attendence", 100))
+    sh = float(row.get("Study_hours", 5))
+    it1 = float(row.get("internal_test 1", 0))
+    it2 = float(row.get("internal_test 2", 0))
+    asgn = float(row.get("Assignment_score", 100))
+
+    if att < 75:
+        reasons.append(f"📅 Your attendance is {att}%, which is below 75%. This affects your understanding of subjects.")
+
+    if sh < 3:
+        reasons.append(f"📚 You study only {sh} hours/day. Increasing study time can improve performance.")
+
+    if it2 < it1:
+        reasons.append(f"📉 Your marks dropped from Internal 1 ({it1}) to Internal 2 ({it2}).")
+
+    if asgn < 50:
+        reasons.append(f"📝 Your assignment score is {asgn}, which is low.")
+
+    if not reasons:
+        reasons.append("✅ Your performance is stable and good.")
+
+    return reasons
+
+import io
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+def build_student_report_pdf(student_id, row, predicted_score, risk,
+                             suggestions, class_avg,
+                             benchmark_diff, pct_below):
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer)
+
+    styles = getSampleStyleSheet()
+    content = []
+
+    # 🎓 Title
+    content.append(Paragraph("Student Performance Report", styles["Title"]))
+    content.append(Spacer(1, 12))
+
+    # 📌 Basic Details
+    content.append(Paragraph(f"<b>Student ID:</b> {student_id}", styles["Normal"]))
+    content.append(Paragraph(f"<b>Final Exam Score:</b> {row.get('Final_Exam_Score', 'N/A')}", styles["Normal"]))
+    content.append(Paragraph(f"<b>Attendance:</b> {row.get('Attendence', 'N/A')}%", styles["Normal"]))
+    content.append(Paragraph(f"<b>Study Hours:</b> {row.get('Study_hours', 'N/A')}", styles["Normal"]))
+    content.append(Spacer(1, 12))
+
+    # 🤖 Prediction
+    content.append(Paragraph("<b>Prediction</b>", styles["Heading2"]))
+    content.append(Paragraph(f"Predicted Score: {predicted_score}", styles["Normal"]))
+    content.append(Paragraph(f"Risk Level: {risk}", styles["Normal"]))
+    content.append(Spacer(1, 12))
+
+    # 📊 Benchmark
+    content.append(Paragraph("<b>Benchmark Analysis</b>", styles["Heading2"]))
+    content.append(Paragraph(f"Class Average: {class_avg}", styles["Normal"]))
+    
+    if benchmark_diff is not None:
+        if benchmark_diff >= 0:
+            content.append(Paragraph(f"You are ABOVE average by {benchmark_diff} marks", styles["Normal"]))
+        else:
+            content.append(Paragraph(f"You are BELOW average by {abs(benchmark_diff)} marks", styles["Normal"]))
+
+    if pct_below is not None:
+        content.append(Paragraph(f"Better than {pct_below}% of students", styles["Normal"]))
+
+    content.append(Spacer(1, 12))
+
+    # 💡 Suggestions
+    content.append(Paragraph("<b>Suggestions</b>", styles["Heading2"]))
+
+    if suggestions:
+        for title, tip in suggestions:
+            content.append(Paragraph(f"• {title}: {tip}", styles["Normal"]))
+            content.append(Spacer(1, 6))
+    else:
+        content.append(Paragraph("Great performance! Keep it up.", styles["Normal"]))
+
+    # 📄 Build PDF
+    doc.build(content)
+
+    buffer.seek(0)
+    return buffer
+
+from flask import abort
+import io
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
+@app.route("/teacher/student-report/<student_id>")
+@login_required("teacher")
+def student_report(student_id):
+
+    df = load_csv()
+    match = df[df["Student_ID"].astype(str) == str(student_id)]
+
+    if match.empty:
+        abort(404, description="Student not found")
+
+    row = match.iloc[0].to_dict()
+
+    # ✅ Prediction
+    predicted = predict_score(row)
+    risk = risk_label(predicted)
+
+    # ✅ Suggestions
+    suggestions = generate_suggestions(predicted, row) if predicted and predicted < 80 else []
+
+    # ✅ Benchmark
+    class_avg = round(float(df["Final_Exam_Score"].mean()), 1)
+    benchmark_diff = round(predicted - class_avg, 1) if predicted else None
+    pct_below = round(float((df["Final_Exam_Score"] <= predicted).mean() * 100), 1) if predicted else None
+
+    # ✅ USE YOUR FORMATTED FUNCTION
+    pdf_buf = build_student_report_pdf(
+        student_id=student_id,
+        row=row,
+        predicted_score=predicted,
+        risk=risk,
+        suggestions=suggestions,
+        class_avg=class_avg,
+        benchmark_diff=benchmark_diff,
+        pct_below=pct_below,
+    )
+
+    return send_file(
+        pdf_buf,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"student_{student_id}_report.pdf",
+    )
+
+@app.route("/teacher/analytics")
+@login_required("teacher")
+def teacher_analytics():
+    df = load_csv()
+
+    # Basic analytics data (safe defaults)
+    hist_labels = ["0-20","20-40","40-60","60-80","80-100"]
+    hist_counts = [0,0,0,0,0]
+
+    for score in df["Final_Exam_Score"]:
+        if score < 20: hist_counts[0]+=1
+        elif score < 40: hist_counts[1]+=1
+        elif score < 60: hist_counts[2]+=1
+        elif score < 80: hist_counts[3]+=1
+        else: hist_counts[4]+=1
+
+    scatter_points = [
+        {"x": row["Attendence"], "y": row["Final_Exam_Score"]}
+        for _, row in df.iterrows()
+    ]
+
+    component_labels = ["Internal 1","Internal 2","Assignment"]
+
+    at_risk = df[df["Final_Exam_Score"] < 70]
+    safe = df[df["Final_Exam_Score"] >= 70]
+
+    component_at_means = [
+        at_risk["internal_test 1"].mean() if not at_risk.empty else 0,
+        at_risk["internal_test 2"].mean() if not at_risk.empty else 0,
+        at_risk["Assignment_score"].mean() if not at_risk.empty else 0
+    ]
+
+    component_safe_means = [
+        safe["internal_test 1"].mean() if not safe.empty else 0,
+        safe["internal_test 2"].mean() if not safe.empty else 0,
+        safe["Assignment_score"].mean() if not safe.empty else 0
+    ]
+
+    import json
+
+    return render_template("teacher_analytics.html",
+        hist_labels_json=json.dumps(hist_labels),
+        hist_counts_json=json.dumps(hist_counts),
+        scatter_points_json=json.dumps(scatter_points),
+        component_labels_json=json.dumps(component_labels),
+        component_at_means_json=json.dumps(component_at_means),
+        component_safe_means_json=json.dumps(component_safe_means),
+        attendance_perf_corr=round(df["Attendence"].corr(df["Final_Exam_Score"]),2)
+    )
+
+@app.route("/chatbot", methods=["POST"])
+def chatbot():
+    try:
+        user_message = request.json.get("message", "").lower()
+
+        # ✅ Basic replies
+        if any(word in user_message for word in ["hi", "hello", "hey"]):
+            return jsonify({"reply": "👋 Hello! I am your Academic Assistant."})
+
+        if "help" in user_message:
+            return jsonify({"reply": """🤖 You can ask:
+- What is my score?
+- Why is my performance low?
+- How to improve?
+- Give suggestions"""})
+
+        # ✅ Check login
+        if "user_id" not in session:
+            return jsonify({"reply": "🔒 Please login first."})
+
+        # ✅ Get student from DB
+        student = db.get_student_by_user_id(session["user_id"])
+
+        if not student:
+            return jsonify({"reply": "❌ Student not found in database."})
+
+        student_id = str(student.get("student_code", "")).strip().upper()
+
+        if not student_id:
+            return jsonify({"reply": "⚠️ Student ID missing."})
+
+        # ✅ Load CSV
+        try:
+            df = load_csv()
+        except Exception as e:
+            return jsonify({"reply": f"⚠️ Error loading data file: {e}"})
+
+        # ✅ Normalize CSV IDs
+        df["Student_ID"] = df["Student_ID"].astype(str).str.strip().str.upper()
+
+        # ✅ Match student
+        match = df[df["Student_ID"] == student_id]
+
+        if match.empty:
+            return jsonify({"reply": f"⚠️ No data found for Student ID: {student_id}"})
+
+        # ✅ Extract row
+        row = match.iloc[0].to_dict()
+
+        # ✅ Predict
+        score = predict_score(row)
+        risk = risk_label(score)
+        suggestions = generate_suggestions(score if score else 0, row)
+
+        # ✅ Build prompt
+        prompt = f"""
+You are an academic assistant.
+
+Student Details:
+- Score: {score}
+- Risk: {risk}
+- Attendance: {row.get('Attendence')}
+- Study Hours: {row.get('Study_hours')}
+- Internal 1: {row.get('internal_test 1')}
+- Internal 2: {row.get('internal_test 2')}
+- Assignment: {row.get('Assignment_score')}
+
+Suggestions:
+{', '.join([tip[1] for tip in suggestions])}
+
+User Question: {user_message}
+
+Give clear, short, helpful answer.
+"""
+
+        # ✅ Call Gemini API
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt
+            )
+            reply = response.text.strip()
+
+            if not reply:
+                raise ValueError("Empty response from AI")
+
+        except Exception as e:
+            print("Gemini Error:", e)
+
+            # ✅ SMART FALLBACK
+            if "score" in user_message:
+                reply = f"📊 Your predicted score is {score} ({risk})"
+
+            elif "why" in user_message or "low" in user_message:
+                reasons = explain_prediction(row)
+                reply = "📌 Reasons:\n" + "\n".join(reasons)
+
+            elif "improve" in user_message or "suggest" in user_message:
+                if suggestions:
+                    reply = "💡 Suggestions:\n" + "\n".join([tip[1] for tip in suggestions])
+                else:
+                    reply = "👍 Your performance is already good."
+
+            else:
+                reply = "⚠️ AI unavailable. Showing basic analysis.\n"
+                reply += f"Score: {score} ({risk})"
+
+        return jsonify({"reply": reply})
+
+    except Exception as e:
+        print("Chatbot Error:", e)
+        return jsonify({"reply": "❌ Something went wrong. Please try again."})
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

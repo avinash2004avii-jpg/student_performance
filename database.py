@@ -155,6 +155,7 @@ def get_all_teachers():
     return [dict(r) for r in rows]
 
 
+
 def get_teacher_by_user_id(user_id):
     conn = get_conn()
     r = conn.execute(
@@ -180,7 +181,6 @@ def get_all_users():
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
-
 
 def delete_user(user_id: int):
     conn = get_conn()

@@ -1,47 +1,56 @@
 {% extends "base.html" %}
 {% block title %}All Students{% endblock %}
 {% block body %}
-<div class="topbar">
-  <span class="topbar-brand">🎓 Student Performance System</span>
-  <div class="topbar-right">
-    <span class="topbar-user">{{ session.username }}</span>
-    <a href="/logout" class="btn btn-outline btn-sm btn-round">Logout</a>
-  </div>
+<div class="topbar" style="justify-content:flex-end;">
+  <a href="{{ '/teacher' if session.role == 'teacher' else '/admin' }}"
+     class="btn btn-outline btn-sm btn-round">Back</a>
 </div>
 
-<div class="layout">
-  <nav class="sidebar">
-    <div class="sidebar-logo">
-      {% if session.role == 'admin' %}Admin Panel{% else %}Teacher Panel{% endif %}
-    </div>
-    {% if session.role == 'admin' %}
-      <a href="/admin">📊 Dashboard</a>
-      <a href="/admin/students" class="active">👨‍🎓 Students</a>
-      <a href="/admin/add-student">➕ Add Student</a>
-    {% else %}
-      <a href="/teacher">📊 Dashboard</a>
-      <a href="/teacher/predict">🔮 Predict Student</a>
-      <a href="/teacher/bulk-predict">📂 Bulk Predict</a>
-      <a href="/teacher/students" class="active">👨‍🎓 All Students</a>
-      <a href="/teacher/add-student">➕ Add Student</a>
-    {% endif %}
-    <div class="divider"></div>
-    <a href="/logout">🚪 Logout</a>
-  </nav>
+<div class="page">
+  <style>
+    /* Full-width layout for the students table page (no sidebar present). */
+    .container.students-full{
+      max-width:100%;
+      width:100%;
+      padding:22px 22px;
+    }
+    .container.students-full .section{width:100%;}
+    /* Allow the table wrapper to fill the available space */
+    .container.students-full .tbl-wrap{width:100%;}
+    /* Prevent an unnecessary minimum width from making the table area look small */
+    .container.students-full table{min-width:0;}
+  </style>
 
-  <div class="page">
-    <div class="container">
+  <div class="container students-full">
       <h1>👨‍🎓 All Students</h1>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-        <form method="GET" style="display:flex;gap:8px">
-          <input class="search-input" name="q" value="{{ q }}" placeholder="Search by Student ID…">
-          <button class="btn btn-primary btn-sm" type="submit">Search</button>
+        <form method="GET" style="display:flex;gap:8px;align-items:center" id="studentSearchForm">
+          <input class="search-input" name="q" value="{{ q }}" placeholder="Search Student ID…" style="width:210px">
+          <input type="hidden" name="risk" id="riskField" value="">
+          <!-- Live search autosubmits; keep submit button hidden to match UI -->
+          <button class="btn btn-primary btn-sm" type="submit" style="display:none">Search</button>
+
+          {% if session.role == 'teacher' %}
+          <select name="class_" onchange="this.form.submit()" style="width:150px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;outline:none">
+            <option value="" {% if not selected_class %}selected{% endif %}>All</option>
+            {% for c in class_options %}
+              <option value="{{ c }}" {% if selected_class == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <select name="section" onchange="this.form.submit()" style="width:150px;padding:9px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;outline:none">
+            <option value="" {% if not selected_section %}selected{% endif %}>All</option>
+            {% for s in section_options %}
+              <option value="{{ s }}" {% if selected_section == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
         </form>
         {% if session.role == 'admin' %}
         <div style="display:flex;gap:10px">
           <a href="/admin/add-student" class="btn btn-primary btn-sm">➕ Add Student</a>
           <form method="POST" action="/admin/upload-students" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="file" name="file" accept=".csv,.xlsx" required
               style="font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:6px 10px;border-radius:6px">
             <button class="btn btn-success btn-sm" type="submit">⬆ Upload CSV</button>
@@ -51,6 +60,7 @@
         <div style="display:flex;gap:10px">
           <a href="/teacher/add-student" class="btn btn-primary btn-sm">➕ Add Student</a>
           <form method="POST" action="/teacher/upload-students" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="file" name="file" accept=".csv,.xlsx" required
               style="font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);padding:6px 10px;border-radius:6px">
             <button class="btn btn-success btn-sm" type="submit">⬆ Upload CSV</button>
@@ -68,6 +78,7 @@
                 <th>IT1</th><th>IT2</th><th>Assignment</th><th>Previous</th>
                 <th>Final Score</th><th>Risk</th>
                 {% if session.role == 'admin' %}<th>Action</th>{% endif %}
+                {% if session.role == 'teacher' %}<th>Report</th>{% endif %}
               </tr>
             </thead>
             <tbody>
@@ -88,9 +99,15 @@
                 </td>
                 {% if session.role == 'admin' %}
                 <td>
-                  <a href="/admin/delete-student/{{ s.Student_ID }}"
-                     onclick="return confirm('Delete student {{ s.Student_ID }}?')"
-                     class="btn btn-danger btn-sm">Delete</a>
+                  <form method="POST" action="/admin/delete-student/{{ s.Student_ID }}" onsubmit="return confirm('Delete student {{ s.Student_ID }}?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                  </form>
+                </td>
+                {% endif %}
+                {% if session.role == 'teacher' %}
+                <td>
+                  <a class="btn btn-primary btn-sm" href="/teacher/student-report/{{ s.Student_ID }}">Download PDF</a>
                 </td>
                 {% endif %}
               </tr>
@@ -103,7 +120,30 @@
         {% endif %}
       </div>
 
-    </div>
   </div>
 </div>
+
+<script>
+// Live search: auto-submit the existing GET form while typing (debounced).
+(() => {
+  const form = document.getElementById('studentSearchForm');
+  if (!form) return;
+
+  const input = form.querySelector('input[name="q"]');
+  if (!input) return;
+
+  let t = null;
+  const riskField = document.getElementById('riskField');
+  if (riskField) {
+    const params = new URLSearchParams(window.location.search);
+    riskField.value = params.get('risk') || '';
+  }
+  input.addEventListener('input', () => {
+    clearTimeout(t);
+    // Longer debounce prevents a page reload after the 1st digit
+    // when the user is quickly typing a 2+ digit Student ID.
+    t = setTimeout(() => form.submit(), 900);
+  });
+})();
+</script>
 {% endblock %}

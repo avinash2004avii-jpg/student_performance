@@ -3,8 +3,15 @@
 {% block body %}
 <div class="topbar">
   <span class="topbar-brand">🎓 Student Performance System</span>
+
   <div class="topbar-right">
     <span class="topbar-user">👨‍🏫 {{ session.username }}</span>
+
+    <!-- 🌙 Mode Toggle -->
+    <button onclick="toggleMode()" class="btn btn-outline btn-sm btn-round">
+      🌙 Mode
+    </button>
+
     <a href="/logout" class="btn btn-outline btn-sm btn-round">Logout</a>
   </div>
 </div>
@@ -15,6 +22,7 @@
     <a href="/teacher" class="active">📊 Dashboard</a>
     <a href="/teacher/predict">🔮 Predict Student</a>
     <a href="/teacher/bulk-predict">📂 Bulk Predict</a>
+    <a href="/teacher/analytics">📈 Analytics</a>
     <a href="/teacher/students">👨‍🎓 All Students</a>
     <a href="/teacher/add-student">➕ Add Student</a>
     <div class="divider"></div>
@@ -82,4 +90,355 @@
     </div>
   </div>
 </div>
+<!-- Chatbot Button -->
+<div id="chatbot-icon" onclick="toggleChat()">
+💬
+</div>
+
+<!-- Chatbot Box -->
+<div id="chatbot-icon" onclick="toggleChat()">💬</div>
+
+<!-- Chatbot Box -->
+<div id="chatbot-box" style="display:none;">
+
+    <div id="chat-header">AI Assistant</div>
+
+    <!-- Messages -->
+    <div id="chat-body"></div>
+
+    <!-- ✅ Footer (FIXED) -->
+    <div id="chat-footer">
+        <input type="text" id="user-input" placeholder="Ask something..."
+               onkeypress="handleKey(event)">
+        <button onclick="sendMessage()">➤</button>
+    </div>
+
+</div>
+
+<style>
+#chatbot-icon{
+    position:fixed;
+    bottom:25px;
+    right:25px;
+    background:#7b2cff;
+    color:white;
+    padding:18px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:20px;
+    box-shadow:0 0 15px rgba(123,44,255,0.6);
+    z-index:1000;
+}
+
+/* Chatbot box */
+#chatbot-box{
+    position:fixed;
+    bottom:90px;
+    right:25px;
+    width:420px;
+    height:550px;
+    background:#140024;
+    border-radius:20px;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 0 25px rgba(123,44,255,0.5);
+    z-index:1000;
+}
+
+/* 🌙 Default Dark Theme */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e0033);
+    color: #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+/* ☀ Light Mode */
+body.light-mode {
+    background: #f8fafc;
+    color: #111827;
+}
+
+/* 🔷 Topbar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    background: rgba(30, 0, 51, 0.7);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #333;
+}
+
+body.light-mode .topbar {
+    background: #ffffff;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: linear-gradient(180deg, #140024, #1e0033);
+    height: 100vh;
+    padding: 20px;
+    position: fixed;
+}
+
+body.light-mode .sidebar {
+    background: #ffffff;
+}
+
+/* Sidebar links */
+.sidebar a {
+    display: block;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    color: #cbd5f5;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+    background: #7b2cff;
+    color: white;
+}
+
+body.light-mode .sidebar a {
+    color: #333;
+}
+
+body.light-mode .sidebar a.active {
+    background: #7b2cff;
+    color: white;
+}
+
+/* Page content */
+.page {
+    margin-left: 260px;
+    padding: 25px;
+}
+
+/* Cards */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    transition: 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+body.light-mode .stat-card {
+    background: #ffffff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Section */
+.section {
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 14px;
+    margin-top: 20px;
+}
+
+body.light-mode .section {
+    background: #ffffff;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #7b2cff, #9d4edd);
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #00c853, #2ecc71);
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #7b2cff;
+    color: #7b2cff;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+}
+
+thead {
+    background: #7b2cff;
+    color: white;
+}
+
+tbody tr {
+    border-bottom: 1px solid #333;
+}
+
+body.light-mode tbody tr {
+    border-bottom: 1px solid #ddd;
+}
+
+/* Badge */
+.badge-risk {
+    background: #ff005e;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+/* Chatbot */
+#chatbot-box {
+    background: #1e0033;
+}
+
+body.light-mode #chatbot-box {
+    background: #ffffff;
+    color: black;
+}
+
+/* Header */
+#chat-header{
+    background:linear-gradient(90deg,#7b2cff,#9d4edd);
+    padding:15px;
+    font-weight:bold;
+    text-align:center;
+    font-size:18px;
+    border-radius:20px 20px 0 0;
+}
+
+/* Chat body */
+#chat-body{
+    flex:1;
+    overflow-y:auto;
+    padding:15px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+/* Footer (FIXED AT BOTTOM) */
+#chat-footer{
+    display:flex;
+    align-items:center;
+    padding:10px;
+    background:#1e0033;
+    border-top:1px solid #333;
+}
+
+/* ✅ FIXED INPUT ID */
+#user-input{
+    flex:1;
+    padding:12px;
+    border:none;
+    outline:none;
+    background:#1e0033;
+    color:white;
+    font-size:14px;
+    border-radius:8px;
+}
+
+/* Button */
+#chat-footer button{
+    background:#7b2cff;
+    border:none;
+    color:white;
+    padding:10px 16px;
+    margin-left:8px;
+    cursor:pointer;
+    font-size:16px;
+    border-radius:8px;
+}
+
+#chat-footer button:hover{
+    background:#9d4edd;
+}
+</style>
+
+<script>
+function toggleChat(){
+    let box = document.getElementById("chatbot-box");
+    box.style.display = box.style.display === "none" ? "flex" : "none";
+}
+
+function handleKey(event){
+    if(event.key === "Enter"){
+        sendMessage();
+    }
+}
+
+function sendMessage(){
+    let input = document.getElementById("user-input");
+    let message = input.value;
+
+    if(message === "") return;
+
+    let chatBody = document.getElementById("chat-body");
+
+    chatBody.innerHTML += "<div><b>You:</b> " + message + "</div>";
+
+    fetch("/chatbot", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({message: message})
+    })
+    .then(res => res.json())
+    .then(data => {
+        chatBody.innerHTML += "<div><b>Bot:</b> " + data.reply + "</div>";
+        chatBody.scrollTop = chatBody.scrollHeight;
+    });
+
+    input.value = "";
+}
+</script>
+<script>
+function toggleMode(){
+    document.body.classList.toggle("light-mode");
+
+    if(document.body.classList.contains("light-mode")){
+        localStorage.setItem("theme","light");
+    } else {
+        localStorage.setItem("theme","dark");
+    }
+}
+
+window.onload = function(){
+    if(localStorage.getItem("theme") === "light"){
+        document.body.classList.add("light-mode");
+    }
+}
+</script>
 {% endblock %}
